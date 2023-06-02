@@ -1,7 +1,7 @@
 #ifndef __H_A44ENC__
 #define __H_A44ENC__
 
-#define PROGRAM_VERSION "0.2.0 (2023/06/02)"
+#define PROGRAM_VERSION "0.3.0 (2023/06/03)"
 
 #define FORMAT_ADPCM  (0)
 #define FORMAT_RAW    (1)

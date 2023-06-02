@@ -254,7 +254,7 @@ int32_t main(int32_t argc, char* argv[]) {
   pcm_buffer = (int16_t*)malloc(sizeof(int16_t) * pcm_buffer_len);
   
   // allocate output adpcm buffer
-  size_t output_buffer_len = pcm_buffer_len / 4;
+  size_t output_buffer_len = pcm_buffer_len / 2;
   output_buffer = (uint8_t*)malloc(sizeof(uint8_t) * output_buffer_len);
   
   // sigint handler
