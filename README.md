@@ -10,6 +10,8 @@ Raspberry Pi OSを含むLinuxとmacOS上で動作する、S44/WAV形式16bit PCM
 - .m32/.m44/.m48 ... 16bit Raw PCM (big endian) mono
 - .wav ... Windows WAV 16bit Raw PCM (little endian) stereo/mono
 
+A44(YM2608) ADPCM形式は元のデータサイズを1/4に圧縮することができる上、聴感上の音質の低下がとても少なくデコードの負担が軽い、大変実用的なフォーマットです。X68KのPCM拡張ボードであるまーきゅりーゆにっと関連を中心に広く使われていたもので、現在でも全く問題なく使えるレベルにあります。
+
 ---
 
 ## How to Install
