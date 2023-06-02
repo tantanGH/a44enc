@@ -297,9 +297,9 @@ int32_t main(int32_t argc, char* argv[]) {
 exit:
 
   // close output file
-  if (fo!= NULL) {
+  if (fo != NULL) {
     fclose(fo);
-    fo= NULL;
+    fo = NULL;
   }
 
   // close input file

@@ -35,12 +35,10 @@ void ym2608_encode_close(YM2608_ENCODE_HANDLE* ym2608) {
 //
 //  one frame conversion macro (respect to adpcmlib.s by Otankonas-san)
 //
-static inline void onef(uint8_t** a1_, int16_t* rd_, uint8_t** ra_, int16_t* rd2_) {
-
-  uint8_t* a1 = *a1_;                                   // PCMデータポインタ
-  uint8_t* ra = *ra_;                                   // 変換テーブルポインタ
+static inline void onef(int16_t pcm_data, int16_t* rd_, uint8_t** ra_, int16_t* rd2_) {
 
   int16_t rd = *rd_;                                    // 予測値
+  uint8_t* ra = *ra_;                                   // 変換テーブルポインタ
   int16_t rd2 = *rd2_;                                  // 出力値
 
   int16_t d5;                                           // 実測値
@@ -49,7 +47,7 @@ static inline void onef(uint8_t** a1_, int16_t* rd_, uint8_t** ra_, int16_t* rd2
   int32_t vc;                                           // オーバーフローチェック用
 
   // ソースPCMデータ読み込み
-  d5 = (int16_t)(a1[0] * 256 + a1[1]); a1 += 2;         //  move.w (a1)+,d5
+  d5 = pcm_data;                                        //  move.w (a1)+,d5
 
   // 予測値との差分を取る
   d5 -= rd;                                             //  sub.w RD,d5
@@ -215,11 +213,8 @@ label4:                                                 // 4:
   ra += (int16_t)(ra[0] * 256 + ra[1]);                 //  add.w (RA),RA
 
   // 呼び出し元の変数を書き換える
-  *ra_ = ra;
-  *a1_ = a1;
-
-  // 呼び出し元の変数を書き換える
   *rd_ = rd;
+  *ra_ = ra;
   *rd2_ = rd2;
 }
 
@@ -246,7 +241,6 @@ conv_monob:
 		move.w	y(a6),d2                  * d2 = 予測値
 */
 
-    int16_t* a1 = source_buffer;
     uint8_t* a4 = output_buffer;
     uint8_t* a3 = ym2608->ra;
     int16_t d6 = 0;
@@ -263,13 +257,11 @@ conv_monob:
 		subq.l	#4,d0                     * ソースPCMデータのカウンタを4バイト減らす = 16bit PCMデータ2つで 1バイトのADPCMデータとなるため
 		bcc	lpbm
 */
-      onef((uint8_t**)&a1, &d2, &a3, &d6);
+      onef(source_buffer[ source_buffer_ofs ++ ], &d2, &a3, &d6);
       d6 <<= 4;
-      onef((uint8_t**)&a1, &d2, &a3, &d6);
+      onef(source_buffer[ source_buffer_ofs ++ ], &d2, &a3, &d6);
       a4[ output_buffer_ofs ++ ] = d6;
       d6 = 0;
-
-      source_buffer_ofs += 2;
 
     }
 
@@ -301,7 +293,6 @@ conv_stereob:
 		move.w	ry(a6),d2             * d2 = 前回予測値(R)
 */
 
-    int16_t* a1 = source_buffer;
     uint8_t* a4 = output_buffer;
     uint8_t* a2 = ym2608->la;
     uint8_t* a3 = ym2608->ra;
@@ -327,18 +318,16 @@ conv_stereob:
 		subq.l	#8,d0
 		bcc	lpb
 */
-      onef((uint8_t**)&a1, &d2, &a3, &d6);
+      onef(source_buffer[ source_buffer_ofs ++ ], &d2, &a3, &d6);
       d6 <<= 4;
-      onef((uint8_t**)&a1, &d1, &a2, &d7);
+      onef(source_buffer[ source_buffer_ofs ++ ], &d1, &a2, &d7);
       d7 <<= 4;
-      onef((uint8_t**)&a1, &d2, &a3, &d6);
-      onef((uint8_t**)&a1, &d1, &a2, &d7);
+      onef(source_buffer[ source_buffer_ofs ++ ], &d2, &a3, &d6);
+      onef(source_buffer[ source_buffer_ofs ++ ], &d1, &a2, &d7);
       a4[ output_buffer_ofs ++ ] = d6;
       a4[ output_buffer_ofs ++ ] = d7;
       d6 = 0;
       d7 = 0;
-
-      source_buffer_ofs += 4;
 
     }
 
