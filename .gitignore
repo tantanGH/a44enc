@@ -1,0 +1,5 @@
+.DS_Store
+
+src/_work
+src/*.o
+src/a44enc
