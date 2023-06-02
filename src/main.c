@@ -49,7 +49,6 @@ int32_t main(int32_t argc, char* argv[]) {
   uint8_t* output_buffer = NULL; 
   char* input_file_name = NULL;
   char* output_file_name = NULL;
-  output_file_name[0] = '\0';
 
   // input and output file handle
   FILE* fp = NULL;
