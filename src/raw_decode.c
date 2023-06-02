@@ -19,7 +19,7 @@ int32_t raw_decode_open(RAW_DECODE_HANDLE* pcm, int32_t sample_rate, int16_t cha
 
   rc = 0;
 
-exit:
+//exit:
   return rc;
 }
 

@@ -48,7 +48,7 @@ int32_t main(int32_t argc, char* argv[]) {
   int16_t* pcm_buffer = NULL;
   uint8_t* output_buffer = NULL; 
   char* input_file_name = NULL;
-  char output_file_name[ MAX_PATH_LEN ];
+  char* output_file_name = NULL;
   output_file_name[0] = '\0';
 
   // input and output file handle
@@ -82,20 +82,26 @@ int32_t main(int32_t argc, char* argv[]) {
         goto exit;
       }
     } else {
-      if (input_file_name != NULL) {
-        strcpy(output_file_name, argv[i]);
-      } else if (output_file_name[0] != '\0') {
+      if (output_file_name != NULL) {
         printf("error: too many file names\n");
         show_help_message();
         goto exit;
+      } else if (input_file_name != NULL) {
+        output_file_name = argv[i];
       } else {
         input_file_name = argv[i];
       }
     }
   }
 
-  // no input/output file?
-  if (input_file_name == NULL || output_file_name[0] == '\0') {
+  // no input file?
+  if (input_file_name == NULL) {
+    show_help_message();
+    goto exit;
+  }
+
+  // no output file?
+  if (output_file_name == NULL) {
     show_help_message();
     goto exit;
   }
@@ -263,13 +269,12 @@ int32_t main(int32_t argc, char* argv[]) {
     size_t len = fread(fread_buffer, sizeof(int16_t), fread_buffer_len, fp);
     if (len == 0) break;
     fread_len += len;
-    size_t decode_len = 0;
-    if (input_format == FORMAT_RAW) {
-      decode_len = raw_decode_exec(&raw_decoder, pcm_buffer, fread_buffer, len);
-    } else if (input_format == FORMAT_WAV) {
-      decode_len = wav_decode_exec(&wav_decoder, pcm_buffer, fread_buffer, len);
-    }
-    //printf("fread_len=%zu, decode_len=%zu\n", fread_len, decode_len);
+    size_t decode_len =
+      (input_format == FORMAT_RAW) ? 
+        decode_len = raw_decode_exec(&raw_decoder, pcm_buffer, fread_buffer, len) :
+      (input_format == FORMAT_WAV) ?
+        decode_len = wav_decode_exec(&wav_decoder, pcm_buffer, fread_buffer, len) : 0;
+//    printf("len=%zu, fread_len=%zu, decode_len=%zu\n", len, fread_len, decode_len);
     size_t output_len = ym2608_encode_exec(&ym2608_encoder, output_buffer, pcm_buffer, len);
     fwrite(output_buffer, sizeof(uint8_t), output_len, fo);
     printf("\r%zu/%zu (%4.2f%%)", fread_len * sizeof(int16_t), pcm_data_size, fread_len * sizeof(int16_t) * 100.0 / pcm_data_size);
@@ -327,14 +332,10 @@ exit:
   }
 
   // close raw decoder
-  if (input_format == FORMAT_RAW) {
-    raw_decode_close(&raw_decoder);
-  }
+  raw_decode_close(&raw_decoder);
 
   // close wav decoder
-  if (input_format == FORMAT_WAV) {
-    wav_decode_close(&wav_decoder);
-  }
+  wav_decode_close(&wav_decoder);
 
   // close ym2608 encoder
   ym2608_encode_close(&ym2608_encoder);

@@ -25,7 +25,7 @@ int32_t wav_decode_open(WAV_DECODE_HANDLE* wav, int16_t volume) {
 
   rc = 0;
 
-exit:
+//exit:
   return rc;
 }
 

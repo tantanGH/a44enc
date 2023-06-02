@@ -21,7 +21,7 @@ int32_t ym2608_encode_open(YM2608_ENCODE_HANDLE* ym2608, int32_t sample_rate, in
 
   rc = 0;
 
-exit:
+//exit:
   return rc;
 }
 
@@ -108,7 +108,7 @@ at4:                                                    // @@:
   btst = rd2 & 0x08;                                    //  btst #3,RD2
 
   // マイナスならlabel2に飛ぶ
-	if (btst != 0) goto label2;                           //  bne 2f      * minus
+  if (btst != 0) goto label2;                           //  bne 2f      * minus
 
   // オーバーフローが発生していないかチェック用
   vc = rd + (int16_t)(ra[0] * 256 + ra[1]);
@@ -229,17 +229,17 @@ size_t ym2608_encode_exec(YM2608_ENCODE_HANDLE* ym2608, uint8_t* output_buffer, 
 
   if (ym2608->channels == 1) {
 
-/*
-conv_monob:
-		subq.l	#1,d0                     * d0 = 16bit PCMデータのバイト数 (1引いておくのはbcc命令の辻褄を合わせるため)
+    /*
+    conv_monob:
+        subq.l	#1,d0                     * d0 = 16bit PCMデータのバイト数 (1引いておくのはbcc命令の辻褄を合わせるため)
 
-		move.l	pcma_add(a6),a1           * a1 = PCMデータ読み出し元アドレス
-		move.l	ra(a6),a3                 * a3 = 変換テーブルポインタ
-		move.l	ada_add(a6),a4            * a4 = ADPCMデータ格納先アドレス
+        move.l	pcma_add(a6),a1           * a1 = PCMデータ読み出し元アドレス
+        move.l	ra(a6),a3                 * a3 = 変換テーブルポインタ
+        move.l	ada_add(a6),a4            * a4 = ADPCMデータ格納先アドレス
 
-		moveq	  #0,d6                     * ADPCM初期値
-		move.w	y(a6),d2                  * d2 = 予測値
-*/
+        moveq	  #0,d6                     * ADPCM初期値
+        move.w	y(a6),d2                  * d2 = 予測値
+    */
 
     uint8_t* a4 = output_buffer;
     uint8_t* a3 = ym2608->ra;
@@ -248,15 +248,16 @@ conv_monob:
 
     while (source_buffer_ofs < source_buffer_len) {
 
-/*
-	lpbm:	onef	d2,a3,d6                * 1サンプル d2 = PCMデータ予測値, a3 = テーブルアドレス, d6 = ADPCMデータ(下位4bit)
-		lsl.w	#4,d6                       * 得られたコードを4bit左シフトする(ということはa44はbig endian的にADPCMデータが格納されている。MSVと逆)
-		onef	d2,a3,d6                    * もう一度エンコードする
-		move.b	d6,(a4)+                  * 4bit+4bitの1バイトを(a4)に書き出す
-		moveq	#0,d6                       * ADPCM値をリセット
-		subq.l	#4,d0                     * ソースPCMデータのカウンタを4バイト減らす = 16bit PCMデータ2つで 1バイトのADPCMデータとなるため
-		bcc	lpbm
-*/
+      /*
+        lpbm:	onef	d2,a3,d6                * 1サンプル d2 = PCMデータ予測値, a3 = テーブルアドレス, d6 = ADPCMデータ(下位4bit)
+          lsl.w	#4,d6                       * 得られたコードを4bit左シフトする(ということはa44はbig endian的にADPCMデータが格納されている。MSVと逆)
+          onef	d2,a3,d6                    * もう一度エンコードする
+          move.b	d6,(a4)+                  * 4bit+4bitの1バイトを(a4)に書き出す
+          moveq	#0,d6                       * ADPCM値をリセット
+          subq.l	#4,d0                     * ソースPCMデータのカウンタを4バイト減らす = 16bit PCMデータ2つで 1バイトのADPCMデータとなるため
+          bcc	lpbm
+      */
+
       onef(source_buffer[ source_buffer_ofs ++ ], &d2, &a3, &d6);
       d6 <<= 4;
       onef(source_buffer[ source_buffer_ofs ++ ], &d2, &a3, &d6);
@@ -265,11 +266,11 @@ conv_monob:
 
     }
 
-/*
-		move.w	d2,y(a6)                  * 予測値を保存
-		move.l	a3,ra(a6)                 * テーブルアドレスを保存
-		rts
-*/
+    /*
+        move.w	d2,y(a6)                  * 予測値を保存
+        move.l	a3,ra(a6)                 * テーブルアドレスを保存
+        rts
+    */
 
     ym2608->ry = d2;
     ym2608->ra = a3;
@@ -278,20 +279,20 @@ conv_monob:
 
   } else {
 
-/*
-conv_stereob:
-		subq.l	#2,d0                 * d0 = 16bit PCMデータのバイト数 (2引いておくのはbcc命令の辻褄を合わせるため)
+    /*
+    conv_stereob:
+        subq.l	#2,d0                 * d0 = 16bit PCMデータのバイト数 (2引いておくのはbcc命令の辻褄を合わせるため)
 
-		move.l	pcma_add(a6),a1       * a1 = PCMデータ読み出し元アドレス
-		move.l	la(a6),a2             * a2 = 変換テーブルポインタ(L)
-		move.l	ra(a6),a3             * a3 = 変換テーブルポインタ(R)
-		move.l	ada_add(a6),a4        * a4 = ADPCMデータ格納先アドレス
+        move.l	pcma_add(a6),a1       * a1 = PCMデータ読み出し元アドレス
+        move.l	la(a6),a2             * a2 = 変換テーブルポインタ(L)
+        move.l	ra(a6),a3             * a3 = 変換テーブルポインタ(R)
+        move.l	ada_add(a6),a4        * a4 = ADPCMデータ格納先アドレス
 
-		moveq	#0,d6                   * d6 = ADPCM初期値(L)
-		moveq	#0,d7                   * d7 = ADPCM初期値(R)
-		move.w	ly(a6),d1             * d1 = 前回予測値(L)
-		move.w	ry(a6),d2             * d2 = 前回予測値(R)
-*/
+        moveq	#0,d6                   * d6 = ADPCM初期値(L)
+        moveq	#0,d7                   * d7 = ADPCM初期値(R)
+        move.w	ly(a6),d1             * d1 = 前回予測値(L)
+        move.w	ry(a6),d2             * d2 = 前回予測値(R)
+    */
 
     uint8_t* a4 = output_buffer;
     uint8_t* a2 = ym2608->la;
@@ -303,41 +304,45 @@ conv_stereob:
 
     while (source_buffer_ofs < source_buffer_len) {
 
-/*
-	lpb:	onef	d2,a3,d6
-		lsl.w	#4,d6
-		onef	d1,a2,d7
-		lsl.w	#4,d7
-		onef	d2,a3,d6
-		onef	d1,a2,d7
+      /*
+        lpb:	onef	d2,a3,d6
+          lsl.w	#4,d6
+          onef	d1,a2,d7
+          lsl.w	#4,d7
+          onef	d2,a3,d6
+          onef	d1,a2,d7
 
-		move.b	d6,(a4)+
-		move.b	d7,(a4)+
-		moveq	#0,d6
-		move.b	d6,d7
-		subq.l	#8,d0
-		bcc	lpb
-*/
+          move.b	d6,(a4)+
+          move.b	d7,(a4)+
+          moveq	#0,d6
+          move.b	d6,d7
+          subq.l	#8,d0
+          bcc	lpb
+      */
+
       onef(source_buffer[ source_buffer_ofs ++ ], &d2, &a3, &d6);
       d6 <<= 4;
       onef(source_buffer[ source_buffer_ofs ++ ], &d1, &a2, &d7);
       d7 <<= 4;
+
       onef(source_buffer[ source_buffer_ofs ++ ], &d2, &a3, &d6);
       onef(source_buffer[ source_buffer_ofs ++ ], &d1, &a2, &d7);
+
       a4[ output_buffer_ofs ++ ] = d6;
       a4[ output_buffer_ofs ++ ] = d7;
+
       d6 = 0;
       d7 = 0;
 
     }
 
-/*
-		move.w	d1,ly(a6)
-		move.l	a2,la(a6)
-		move.w	d2,ry(a6)
-		move.l	a3,ra(a6)
-		rts
-*/
+    /*
+        move.w	d1,ly(a6)
+        move.l	a2,la(a6)
+        move.w	d2,ry(a6)
+        move.l	a3,ra(a6)
+        rts
+    */
 
     ym2608->ly = d1;
     ym2608->la = a2;

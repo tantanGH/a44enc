@@ -3,7 +3,7 @@ TARGET = a44enc
 CC = gcc
 LD = gcc
 
-CFLAGS = -O2
+CFLAGS = -O2 -Wall
 LDFLAGS =
 LIBS =
 
