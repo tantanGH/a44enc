@@ -185,6 +185,37 @@ int32_t main(int32_t argc, char* argv[]) {
     goto exit;
   }
 
+  // check output file format
+  char* output_file_ext = output_file_name + strlen(output_file_name) - 4;
+  if ((pcm_channels == 1 && output_file_ext[1] != 'n' && output_file_ext[1] != 'N') ||
+      (pcm_channels == 2 && output_file_ext[1] != 'a' && output_file_ext[1] != 'A') ||
+      (pcm_freq == 32000 && memcmp(output_file_ext + 2, "32", 2) != 0) ||
+      (pcm_freq == 44100 && memcmp(output_file_ext + 2, "44", 2) != 0) ||
+      (pcm_freq == 48000 && memcmp(output_file_ext + 2, "48", 2) != 0)) {
+        printf("error: output file extension name (%s) is not as expected.\n", output_file_ext);
+        goto exit;
+      }
+
+  // check output file
+  fo = fopen(output_file_name, "rb");
+  if (fo != NULL) {
+    fclose(fo);
+    fo = NULL;
+    printf("warn: output file already exists. do you want to overwrite? (y/n)>");
+    int16_t c = getchar();
+    if (c != 'y' && c != 'Y') {
+      printf("canceled.\n");
+      goto exit;
+    }
+  }
+
+  // open output file
+  fo = fopen(output_file_name, "wb");
+  if (fo == NULL) {
+    printf("error: output file open error.\n");
+    goto exit;
+  }
+
   // describe PCM file information
   printf("File name     : %s\n", input_file_name);
   printf("Data size     : %zu [bytes]\n", pcm_data_size);
@@ -207,6 +238,8 @@ int32_t main(int32_t argc, char* argv[]) {
     printf("PCM length    : %4.2f [sec]\n", (float)wav_decoder.duration / pcm_freq);
   }
 
+  printf("\n");
+
   // allocate file read buffer
   size_t fread_buffer_len = pcm_channels * pcm_freq * 16;   // 16 sec
   fread_buffer = (int16_t*)malloc(sizeof(int16_t) * fread_buffer_len);
@@ -222,13 +255,6 @@ int32_t main(int32_t argc, char* argv[]) {
   // sigint handler
   abort_flag = 0;
   signal(SIGINT, sigint_handler);
-
-  // open output file
-  fo = fopen(output_file_name, "wb");
-  if (fo == NULL) {
-    printf("error: output file open error.\n");
-    goto exit;
-  }
 
   // do conversion
   size_t fread_len = 0;
