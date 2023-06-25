@@ -68,8 +68,9 @@ int32_t main(int32_t argc, char* argv[]) {
   for (int16_t i = 1; i < argc; i++) {
     if (argv[i][0] == '-' && strlen(argv[i]) >= 2) {
       if (argv[i][1] == 'v') {
-        volume = atoi(argv[i]+1);
+        volume = atoi(argv[i]+2);
         if (volume < 1 || volume > 200) {
+          printf("error: bad volume (%d).\n", volume);
           show_help_message();
           goto exit;
         }
